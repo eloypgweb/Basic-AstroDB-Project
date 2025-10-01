@@ -1,0 +1,24 @@
+---
+// src/pages/index.astro
+import { db, Posts } from 'astro:db';
+
+const posts = await db.select().from(Posts);
+---
+<html>
+  <head><meta charset="utf-8"/><title>Posts</title></head>
+  <body>
+    <h1>Posts</h1>
+    <a href="/new">Crear nuevo post</a>
+    <ul>
+      {posts.map(post => (
+        <li>
+          <a href={`/posts/${post.id}`}>{post.title}</a>
+          <form method="POST" action={`/api/posts/${post.id}`} style="display:inline">
+            <input type="hidden" name="_method" value="DELETE" />
+            <button type="submit">Eliminar</button>
+          </form>
+        </li>
+      ))}
+    </ul>
+  </body>
+</html>
