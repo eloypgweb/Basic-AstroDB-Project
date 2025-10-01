@@ -1,164 +1,305 @@
 ---
-import { actions } from 'astro:actions';
+// src/pages/new.astro
 import Layout from '../layouts/Layout.astro';
 
-export const prerender = false; // page must be on-demand rendered for form actions
-const result = Astro.getActionResult(actions.addPost);
-if (result && !result.error && result.data?.id) {
-  // redirigir al inicio después de crear el post
-  // return Astro.redirect(`/posts/${result.data.id}`);
-  return Astro.redirect('/');
-}
+export const prerender = false;
 ---
 
 <Layout title="Crear Nuevo Post">
+  <div class="header">
+    <h1>✍️ Crear Nuevo Post</h1>
+    <p>Comparte tus ideas con el mundo</p>
+  </div>
+
   <div class="card">
-    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
-      <a href="/" class="btn btn-secondary">
-        ← Volver
-      </a>
-      <h1 style="margin: 0; color: var(--text);">✍️ Crear Nuevo Post</h1>
-    </div>
-    
-    {result?.error && (
-      <div class="alert alert-error">
-        ❌ Error creando el post. Por favor, inténtalo de nuevo.
+    <div class="demo-notice">
+      <div class="demo-icon">🚧</div>
+      <div>
+        <strong>Modo demostración</strong><br>
+        Esta funcionalidad estará disponible cuando conectemos la base de datos persistente.
       </div>
-    )}
-    
-    <form method="POST" action={actions.addPost} class="post-form">
+    </div>
+
+    <form class="create-form" onsubmit="showDemo(event)">
       <div class="form-group">
-        <label for="title" class="form-label">📝 Título del Post</label>
+        <label for="title">Título del post</label>
         <input 
-          id="title"
+          type="text" 
+          id="title" 
           name="title" 
-          type="text"
-          class="form-input"
           placeholder="Escribe un título atractivo..."
-          required 
+          required
         />
       </div>
       
       <div class="form-group">
-        <label for="content" class="form-label">📄 Contenido</label>
+        <label for="content">Contenido</label>
         <textarea 
-          id="content"
+          id="content" 
           name="content" 
-          class="form-textarea"
-          placeholder="Escribe aquí el contenido de tu post..."
-          rows="8"
+          rows="12"
+          placeholder="Escribe el contenido de tu post aquí..."
           required
         ></textarea>
       </div>
       
-      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-        <a href="/" class="btn btn-secondary">Cancelar</a>
+      <div class="form-actions">
+        <a href="/" class="btn btn-secondary">
+          ← Volver al inicio
+        </a>
         <button type="submit" class="btn btn-primary">
-          🚀 Crear Post
+          ✨ Crear post
         </button>
       </div>
     </form>
   </div>
 
+  <!-- Modal de demostración -->
+  <div id="demoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚧 Función en desarrollo</h3>
+      </div>
+      <div class="modal-body">
+        <p>La creación de posts estará disponible cuando conectemos la base de datos persistente.</p>
+        <p>¡El formulario y el diseño ya están listos!</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeDemo()">Entendido</button>
+      </div>
+    </div>
+  </div>
+
   <style>
-    /* Estilos completos para la página de crear post */
+    .demo-notice {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #f59e0b;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .demo-icon {
+      font-size: 1.25rem;
+      margin-top: 0.125rem;
+    }
+
+    .demo-notice strong {
+      color: #92400e;
+    }
+
+    .demo-notice div {
+      color: #92400e;
+      line-height: 1.5;
+    }
+
+    .create-form {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      background: var(--bg-card);
+      color: var(--text);
+      resize: vertical;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    .form-group textarea {
+      min-height: 200px;
+      line-height: 1.6;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
       font-size: 0.875rem;
       transition: all 0.2s ease;
       cursor: pointer;
       border: none;
       font-family: inherit;
     }
-
+    
     .btn-primary {
-      background: var(--primary, #6366f1);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
+      box-shadow: var(--shadow-md);
     }
-
+    
     .btn-primary:hover {
-      background: var(--primary-dark, #4f46e5);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
     }
-
+    
     .btn-secondary {
-      background: var(--secondary, #f1f5f9);
-      color: var(--text, #1e293b);
-      border: 1px solid var(--border, #e2e8f0);
+      background: var(--secondary);
+      color: var(--text);
+      border: 2px solid var(--border);
     }
-
+    
     .btn-secondary:hover {
       background: #e2e8f0;
+      border-color: var(--primary);
       transform: translateY(-1px);
     }
-
-    .form-group {
-      margin-bottom: 1.5rem;
+    
+    @media (max-width: 640px) {
+      .form-actions {
+        flex-direction: column;
+      }
+      
+      .btn {
+        justify-content: center;
+        width: 100%;
+      }
     }
 
-    .form-label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: var(--text, #1e293b);
-      font-size: 1rem;
-    }
-
-    .form-input, .form-textarea {
+    /* Estilos del modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
       width: 100%;
-      padding: 0.75rem 1rem;
-      border: 2px solid var(--border, #e2e8f0);
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: all 0.2s ease;
-      font-family: inherit;
-      background: var(--bg, #ffffff);
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
     }
 
-    .form-input:focus, .form-textarea:focus {
-      outline: none;
-      border-color: var(--primary, #6366f1);
-      box-shadow: 0 0 0 3px rgb(99 102 241 / 0.1);
-      transform: translateY(-1px);
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
     }
 
-    .form-textarea {
-      resize: vertical;
-      min-height: 120px;
-      font-family: inherit;
-      line-height: 1.6;
-    }
-
-    .alert {
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      font-weight: 500;
-    }
-
-    .alert-error {
-      background: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
-    }
-
-    .post-form {
-      max-width: 600px;
-    }
-
-    .card {
-      background: var(--bg, #ffffff);
+    .modal-content {
+      background: white;
       border-radius: 16px;
-      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
       box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
-      border: 1px solid var(--border, #e2e8f0);
+      animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+      padding: 1.5rem 1.5rem 1rem 1.5rem;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      color: var(--text, #1e293b);
+      font-size: 1.25rem;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-body p {
+      margin: 0 0 1rem 0;
+      color: var(--text, #1e293b);
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem 1.5rem 1.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
   </style>
+
+  <script>
+    function showDemo(event) {
+      event.preventDefault();
+      const modal = document.getElementById('demoModal');
+      modal?.classList.add('show');
+    }
+
+    function closeDemo() {
+      const modal = document.getElementById('demoModal');
+      modal?.classList.remove('show');
+    }
+
+    // Cerrar modal al hacer click fuera
+    document.addEventListener('click', function(e) {
+      const modal = document.getElementById('demoModal');
+      if (e.target === modal) {
+        modal?.classList.remove('show');
+      }
+    });
+
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('demoModal');
+        modal?.classList.remove('show');
+      }
+    });
+  </script>
 </Layout>

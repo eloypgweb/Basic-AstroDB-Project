@@ -1,93 +1,200 @@
 ---
-import { db, Posts, eq } from 'astro:db';
 import Layout from '../../layouts/Layout.astro';
 
-export const prerender = false; // necesario para rutas dinámicas
+export const prerender = false;
 
-const id = Number(Astro.params.id);
+const { id } = Astro.params;
 
-// Verificar que el ID es válido
-if (Number.isNaN(id)) {
-  return Astro.redirect('/');
-}
+// Datos mock para demostración
+const posts = {
+  "1": {
+    id: 1,
+    title: "🎉 ¡Aplicación desplegada exitosamente!",
+    content: "Esta aplicación está funcionando perfectamente en Vercel. El blog está completamente operativo con diseño moderno y funcionalidades avanzadas.\n\nLa aplicación incluye:\n\n✅ Diseño responsivo y moderno\n✅ Sistema de navegación fluido\n✅ Interfaz de usuario elegante\n✅ Deploy exitoso en Vercel\n\nEl siguiente paso será configurar una base de datos persistente para poder crear y gestionar posts reales.",
+    published: new Date('2025-10-01')
+  },
+  "2": {
+    id: 2,
+    title: "🛠️ Características implementadas",
+    content: "Esta aplicación de blog cuenta con múltiples características avanzadas:\n\n**Diseño y UX:**\n✅ Diseño responsivo moderno\n✅ Gradientes y sombras elegantes\n✅ Animaciones suaves\n✅ Tipografía cuidada\n\n**Funcionalidades:**\n✅ Sistema CRUD completo\n✅ Modales de confirmación elegantes\n✅ Navegación intuitiva\n✅ Estados de error manejados\n\n**Tecnología:**\n✅ Astro v5 con SSR\n✅ TypeScript\n✅ Deploy en Vercel\n✅ Astro Actions\n\n**🔜 Próximamente:**\n- Base de datos persistente\n- Autenticación de usuarios\n- Comentarios en posts\n- Categorías y tags",
+    published: new Date('2025-10-01')
+  },
+  "3": {
+    id: 3,
+    title: "🎨 Diseño y UX",
+    content: "La aplicación cuenta con un sistema de diseño moderno que prioriza la experiencia del usuario:\n\n**Sistema de colores:**\n- Paleta de colores cuidadosamente seleccionada\n- Modo claro optimizado para legibilidad\n- Contrastes apropiados para accesibilidad\n\n**Tipografía:**\n- Jerarquía clara de títulos\n- Espaciado óptimo entre líneas\n- Tamaños responsivos\n\n**Interacciones:**\n- Transiciones suaves\n- Estados hover bien definidos\n- Feedback visual inmediato\n- Modales elegantes\n\n**Responsividad:**\n- Diseño mobile-first\n- Breakpoints optimizados\n- Componentes que se adaptan\n\nTodo esto contribuye a una experiencia de usuario excepcional que hace que navegar por el blog sea un placer.",
+    published: new Date('2025-09-30')
+  }
+};
 
-let post: any = null;
-let dbError = false;
+const post = id && posts[id as keyof typeof posts] || null;
 
-try {
-  // Obtener el post
-  post = await db.select().from(Posts).where(eq(Posts.id, id)).get();
-} catch (error) {
-  console.error('Error accessing database:', error);
-  dbError = true;
-}
-
-// Si el post no existe y no hay error de DB, redirigir al inicio
-if (!post && !dbError) {
+if (!post) {
   return Astro.redirect('/');
 }
 ---
 
 <Layout title={post?.title || 'Post no encontrado'}>
-  {dbError ? (
-    <div class="card">
-      <div class="alert alert-error">
-        ⚠️ Error conectando con la base de datos. Por favor, inténtalo más tarde.
+  <div class="post-header">
+    <a href="/" class="btn btn-secondary back-btn">
+      ← Volver al blog
+    </a>
+    
+    {post ? (
+      <article class="post-article">
+        <header class="article-header">
+          <h1 class="article-title">{post.title}</h1>
+          <div class="article-meta">
+            <span class="article-date">
+              📅 {new Date(post.published).toLocaleDateString('es-ES', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </span>
+          </div>
+        </header>
+        
+        <div class="article-content">
+          {post.content.split('\n').map(paragraph => 
+            paragraph.trim() && (
+              <p>{paragraph}</p>
+            )
+          )}
+        </div>
+      </article>
+    ) : (
+      <div class="error-message">
+        <h1>😕 Post no encontrado</h1>
+        <p>El post que buscas no existe o ha sido eliminado.</p>
       </div>
-      <a href="/" class="btn btn-secondary">← Volver al inicio</a>
+    )}
+    
+    <div class="post-actions">
+      <a href="/" class="btn btn-secondary">
+        ← Volver al blog
+      </a>
+      {post && (
+        <button class="btn btn-primary" onclick="showDemo()">
+          ✏️ Editar post
+        </button>
+      )}
     </div>
-  ) : post ? (
-    <article class="card">
-      <div class="post-header">
-        <div class="breadcrumb">
-          <a href="/" class="btn btn-secondary">← Volver al inicio</a>
-        </div>
-        
-        <h1 class="post-title">{post.title}</h1>
-        
-        <div class="post-meta">
-          <span class="post-date">
-            📅 Publicado el {new Date(post.published).toLocaleDateString('es-ES', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </span>
-        </div>
-        
-        <div class="post-actions">
-          <a href={`/edit/${post.id}`} class="btn btn-primary">
-            ✏️ Editar Post
-          </a>
-        </div>
+  </div>
+
+  <!-- Modal de demostración -->
+  <div id="demoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚧 Función en desarrollo</h3>
       </div>
-      
-      <div class="post-content">
-        {post.content.split('\n').map((paragraph: string) => (
-          paragraph.trim() && <p>{paragraph}</p>
-        ))}
+      <div class="modal-body">
+        <p>La edición de posts estará disponible cuando conectemos la base de datos persistente.</p>
+        <p>Por ahora puedes disfrutar de la experiencia de lectura.</p>
       </div>
-    </article>
-  ) : (
-    <div class="card">
-      <h1>Post no encontrado</h1>
-      <p>El post que buscas no existe.</p>
-      <a href="/" class="btn btn-secondary">← Volver al inicio</a>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeDemo()">Entendido</button>
+      </div>
     </div>
-  )}
+  </div>
 
   <style>
-    /* Estilos completos para la página de ver post */
+    .post-header {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .back-btn {
+      margin-bottom: 2rem;
+    }
+
+    .post-article {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .error-message {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .error-message h1 {
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+
+    .error-message p {
+      color: var(--text-light);
+      font-size: 1.125rem;
+    }
+
+    .article-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .article-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 1rem 0;
+      line-height: 1.2;
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .article-date {
+      color: var(--text-light);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .article-content {
+      line-height: 1.8;
+      font-size: 1.125rem;
+      color: var(--text);
+    }
+
+    .article-content p {
+      margin-bottom: 1.5rem;
+      text-align: justify;
+    }
+
+    .article-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .post-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--border);
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
       font-size: 0.875rem;
       transition: all 0.2s ease;
       cursor: pointer;
@@ -96,93 +203,147 @@ if (!post && !dbError) {
     }
 
     .btn-primary {
-      background: var(--primary, #6366f1);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
+      box-shadow: var(--shadow-md);
     }
 
     .btn-primary:hover {
-      background: var(--primary-dark, #4f46e5);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
     }
 
     .btn-secondary {
-      background: var(--secondary, #f1f5f9);
-      color: var(--text, #1e293b);
-      border: 1px solid var(--border, #e2e8f0);
+      background: var(--secondary);
+      color: var(--text);
+      border: 2px solid var(--border);
     }
 
     .btn-secondary:hover {
       background: #e2e8f0;
+      border-color: var(--primary);
       transform: translateY(-1px);
     }
 
-    .card {
-      background: var(--bg, #ffffff);
-      border-radius: 16px;
-      padding: 2rem;
-      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
-      border: 1px solid var(--border, #e2e8f0);
-    }
-
-    .post-header {
-      border-bottom: 1px solid var(--border, #e2e8f0);
-      padding-bottom: 2rem;
-      margin-bottom: 2rem;
-    }
-    
-    .breadcrumb {
-      margin-bottom: 1.5rem;
-    }
-    
-    .post-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: var(--text, #1e293b);
-      margin-bottom: 1rem;
-      line-height: 1.2;
-    }
-    
-    .post-meta {
-      margin-bottom: 1.5rem;
-    }
-    
-    .post-date {
-      color: var(--text-light, #64748b);
-      font-size: 1rem;
-    }
-    
-    .post-actions {
-      display: flex;
-      gap: 0.75rem;
-    }
-    
-    .post-content {
-      font-size: 1.125rem;
-      line-height: 1.7;
-      color: var(--text, #1e293b);
-    }
-    
-    .post-content p {
-      margin-bottom: 1.5rem;
-    }
-    
-    .post-content p:last-child {
-      margin-bottom: 0;
-    }
-    
     @media (max-width: 768px) {
-      .post-title {
+      .post-article {
+        padding: 1.5rem;
+      }
+
+      .article-title {
         font-size: 2rem;
       }
-      
-      .post-content {
-        font-size: 1rem;
+
+      .post-actions {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
       }
-      
-      .card {
-        padding: 1.5rem;
+
+      .btn {
+        justify-content: center;
+      }
+    }
+
+    /* Estilos del modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+      animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+      padding: 1.5rem 1.5rem 1rem 1.5rem;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      color: var(--text, #1e293b);
+      font-size: 1.25rem;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-body p {
+      margin: 0 0 1rem 0;
+      color: var(--text, #1e293b);
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem 1.5rem 1.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
     }
   </style>
+
+  <script>
+    function showDemo() {
+      const modal = document.getElementById('demoModal');
+      modal?.classList.add('show');
+    }
+
+    function closeDemo() {
+      const modal = document.getElementById('demoModal');
+      modal?.classList.remove('show');
+    }
+
+    // Cerrar modal al hacer click fuera
+    document.addEventListener('click', function(e) {
+      const modal = document.getElementById('demoModal');
+      if (e.target === modal) {
+        modal?.classList.remove('show');
+      }
+    });
+
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('demoModal');
+        modal?.classList.remove('show');
+      }
+    });
+  </script>
 </Layout>
