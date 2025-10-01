@@ -1,5 +1,5 @@
 import { asDrizzleTable } from '@astrojs/db/runtime';
-import { createClient } from '@astrojs/db/db-client/libsql-node.js';
+import { createClient } from '@astrojs/db/db-client/libsql-web.js';
 import '@astrojs/db/dist/runtime/virtual.js';
 
 const db = await createClient({

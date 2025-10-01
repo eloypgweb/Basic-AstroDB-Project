@@ -9,5 +9,7 @@ export default defineConfig({
   adapter: vercel({
     webAnalytics: { enabled: true }
   }),
-  integrations: [db()]
+  integrations: [db({
+    mode: 'web'
+  })]
 });

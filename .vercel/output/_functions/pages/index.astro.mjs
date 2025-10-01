@@ -1,6 +1,6 @@
 import { e as createComponent, f as createAstro, k as renderComponent, r as renderTemplate, m as maybeRenderHead, l as renderScript, h as addAttribute } from '../chunks/astro/server_CAT90Pbl.mjs';
 import 'kleur/colors';
-import { d as db, P as Posts } from '../chunks/_astro_db_Byf9-Wwn.mjs';
+import { d as db, P as Posts } from '../chunks/_astro_db_CIEdBsZG.mjs';
 import { a as actions } from '../chunks/_astro_actions_BklHFfEk.mjs';
 import { $ as $$Layout } from '../chunks/Layout_DaXICC41.mjs';
 /* empty css                                 */
@@ -12,7 +12,15 @@ const prerender = false;
 const $$Index = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Index;
-  const posts = await db.select().from(Posts).orderBy(desc(Posts.published));
+  let posts = [];
+  let dbError = false;
+  try {
+    posts = await db.select().from(Posts).orderBy(desc(Posts.published));
+  } catch (error) {
+    console.error("Error accessing database:", error);
+    dbError = true;
+    posts = [];
+  }
   const deleteResult = Astro2.getActionResult(actions.deletePost);
   if (deleteResult && !deleteResult.error) {
     return Astro2.redirect("/");
@@ -21,7 +29,9 @@ const $$Index = createComponent(async ($$result, $$props, $$slots) => {
 ✍️ Crear nuevo post
 </a> </div> ${deleteResult?.error && renderTemplate`<div class="alert alert-error" data-astro-cid-j7pv25f6>
 ❌ Error eliminando el post
-</div>`} ${posts.length === 0 ? renderTemplate`<div style="text-align: center; padding: 3rem; color: var(--text, #1e293b);" data-astro-cid-j7pv25f6> <div style="font-size: 4rem; margin-bottom: 1rem;" data-astro-cid-j7pv25f6>📝</div> <h3 style="margin-bottom: 0.5rem; color: var(--text, #1e293b);" data-astro-cid-j7pv25f6>No hay posts aún</h3> <p style="color: var(--text, #1e293b); opacity: 0.8;" data-astro-cid-j7pv25f6>¡Crea tu primer post para comenzar!</p> <a href="/new" class="btn btn-primary" style="margin-top: 1rem;" data-astro-cid-j7pv25f6>
+</div>`} ${dbError && renderTemplate`<div class="alert alert-error" data-astro-cid-j7pv25f6>
+⚠️ Error conectando con la base de datos. La aplicación está configurándose.
+</div>`} ${posts.length === 0 && !dbError ? renderTemplate`<div style="text-align: center; padding: 3rem; color: var(--text, #1e293b);" data-astro-cid-j7pv25f6> <div style="font-size: 4rem; margin-bottom: 1rem;" data-astro-cid-j7pv25f6>📝</div> <h3 style="margin-bottom: 0.5rem; color: var(--text, #1e293b);" data-astro-cid-j7pv25f6>No hay posts aún</h3> <p style="color: var(--text, #1e293b); opacity: 0.8;" data-astro-cid-j7pv25f6>¡Crea tu primer post para comenzar!</p> <a href="/new" class="btn btn-primary" style="margin-top: 1rem;" data-astro-cid-j7pv25f6>
 Crear primer post
 </a> </div>` : renderTemplate`<div class="posts-grid" data-astro-cid-j7pv25f6> ${posts.map((post) => renderTemplate`<article class="post-card" data-astro-cid-j7pv25f6> <div class="post-content" data-astro-cid-j7pv25f6> <h3 data-astro-cid-j7pv25f6> <a${addAttribute(`/posts/${post.id}`, "href")} class="post-title-link" data-astro-cid-j7pv25f6> ${post.title} </a> </h3> <p class="post-excerpt" data-astro-cid-j7pv25f6> ${post.content.length > 150 ? post.content.substring(0, 150) + "..." : post.content} </p> <div class="post-meta" data-astro-cid-j7pv25f6> <span class="post-date" data-astro-cid-j7pv25f6>
 📅 ${new Date(post.published).toLocaleDateString("es-ES", {

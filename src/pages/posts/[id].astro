@@ -11,49 +11,72 @@ if (Number.isNaN(id)) {
   return Astro.redirect('/');
 }
 
-// Obtener el post
-const post = await db.select().from(Posts).where(eq(Posts.id, id)).get();
+let post: any = null;
+let dbError = false;
 
-// Si el post no existe, redirigir al inicio
-if (!post) {
+try {
+  // Obtener el post
+  post = await db.select().from(Posts).where(eq(Posts.id, id)).get();
+} catch (error) {
+  console.error('Error accessing database:', error);
+  dbError = true;
+}
+
+// Si el post no existe y no hay error de DB, redirigir al inicio
+if (!post && !dbError) {
   return Astro.redirect('/');
 }
 ---
 
-<Layout title={post.title}>
-  <article class="card">
-    <div class="post-header">
-      <div class="breadcrumb">
-        <a href="/" class="btn btn-secondary">← Volver al inicio</a>
+<Layout title={post?.title || 'Post no encontrado'}>
+  {dbError ? (
+    <div class="card">
+      <div class="alert alert-error">
+        ⚠️ Error conectando con la base de datos. Por favor, inténtalo más tarde.
       </div>
-      
-      <h1 class="post-title">{post.title}</h1>
-      
-      <div class="post-meta">
-        <span class="post-date">
-          📅 Publicado el {new Date(post.published).toLocaleDateString('es-ES', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </span>
-      </div>
-      
-      <div class="post-actions">
-        <a href={`/edit/${post.id}`} class="btn btn-primary">
-          ✏️ Editar Post
-        </a>
-      </div>
+      <a href="/" class="btn btn-secondary">← Volver al inicio</a>
     </div>
-    
-    <div class="post-content">
-      {post.content.split('\n').map(paragraph => (
-        paragraph.trim() && <p>{paragraph}</p>
-      ))}
+  ) : post ? (
+    <article class="card">
+      <div class="post-header">
+        <div class="breadcrumb">
+          <a href="/" class="btn btn-secondary">← Volver al inicio</a>
+        </div>
+        
+        <h1 class="post-title">{post.title}</h1>
+        
+        <div class="post-meta">
+          <span class="post-date">
+            📅 Publicado el {new Date(post.published).toLocaleDateString('es-ES', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        </div>
+        
+        <div class="post-actions">
+          <a href={`/edit/${post.id}`} class="btn btn-primary">
+            ✏️ Editar Post
+          </a>
+        </div>
+      </div>
+      
+      <div class="post-content">
+        {post.content.split('\n').map((paragraph: string) => (
+          paragraph.trim() && <p>{paragraph}</p>
+        ))}
+      </div>
+    </article>
+  ) : (
+    <div class="card">
+      <h1>Post no encontrado</h1>
+      <p>El post que buscas no existe.</p>
+      <a href="/" class="btn btn-secondary">← Volver al inicio</a>
     </div>
-  </article>
+  )}
 
   <style>
     /* Estilos completos para la página de ver post */

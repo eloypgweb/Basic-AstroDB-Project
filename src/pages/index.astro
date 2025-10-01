@@ -6,7 +6,17 @@ import Layout from '../layouts/Layout.astro';
 
 export const prerender = false; // necesario para acciones
 
-const posts = await db.select().from(Posts).orderBy(desc(Posts.published));
+let posts: any[] = [];
+let dbError = false;
+
+try {
+  posts = await db.select().from(Posts).orderBy(desc(Posts.published));
+} catch (error) {
+  console.error('Error accessing database:', error);
+  dbError = true;
+  posts = [];
+}
+
 const deleteResult = Astro.getActionResult(actions.deletePost);
 
 // Si se eliminó un post exitosamente, recargar la página
@@ -34,8 +44,14 @@ if (deleteResult && !deleteResult.error) {
         ❌ Error eliminando el post
       </div>
     )}
+
+    {dbError && (
+      <div class="alert alert-error">
+        ⚠️ Error conectando con la base de datos. La aplicación está configurándose.
+      </div>
+    )}
     
-    {posts.length === 0 ? (
+    {posts.length === 0 && !dbError ? (
       <div style="text-align: center; padding: 3rem; color: var(--text, #1e293b);">
         <div style="font-size: 4rem; margin-bottom: 1rem;">📝</div>
         <h3 style="margin-bottom: 0.5rem; color: var(--text, #1e293b);">No hay posts aún</h3>

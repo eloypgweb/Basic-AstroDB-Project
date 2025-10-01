@@ -1,6 +1,6 @@
 import { e as createComponent, f as createAstro, k as renderComponent, r as renderTemplate, m as maybeRenderHead, h as addAttribute, l as renderScript } from '../../chunks/astro/server_CAT90Pbl.mjs';
 import 'kleur/colors';
-import { d as db, P as Posts } from '../../chunks/_astro_db_Byf9-Wwn.mjs';
+import { d as db, P as Posts } from '../../chunks/_astro_db_CIEdBsZG.mjs';
 import { a as actions } from '../../chunks/_astro_actions_BklHFfEk.mjs';
 import { $ as $$Layout } from '../../chunks/Layout_DaXICC41.mjs';
 /* empty css                                   */
