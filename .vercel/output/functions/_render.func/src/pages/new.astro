@@ -1,0 +1,164 @@
+---
+import { actions } from 'astro:actions';
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = false; // page must be on-demand rendered for form actions
+const result = Astro.getActionResult(actions.addPost);
+if (result && !result.error && result.data?.id) {
+  // redirigir al inicio después de crear el post
+  // return Astro.redirect(`/posts/${result.data.id}`);
+  return Astro.redirect('/');
+}
+---
+
+<Layout title="Crear Nuevo Post">
+  <div class="card">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+      <a href="/" class="btn btn-secondary">
+        ← Volver
+      </a>
+      <h1 style="margin: 0; color: var(--text);">✍️ Crear Nuevo Post</h1>
+    </div>
+    
+    {result?.error && (
+      <div class="alert alert-error">
+        ❌ Error creando el post. Por favor, inténtalo de nuevo.
+      </div>
+    )}
+    
+    <form method="POST" action={actions.addPost} class="post-form">
+      <div class="form-group">
+        <label for="title" class="form-label">📝 Título del Post</label>
+        <input 
+          id="title"
+          name="title" 
+          type="text"
+          class="form-input"
+          placeholder="Escribe un título atractivo..."
+          required 
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="content" class="form-label">📄 Contenido</label>
+        <textarea 
+          id="content"
+          name="content" 
+          class="form-textarea"
+          placeholder="Escribe aquí el contenido de tu post..."
+          rows="8"
+          required
+        ></textarea>
+      </div>
+      
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <a href="/" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+          🚀 Crear Post
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <style>
+    /* Estilos completos para la página de crear post */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary, #6366f1);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark, #4f46e5);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+    }
+
+    .btn-secondary {
+      background: var(--secondary, #f1f5f9);
+      color: var(--text, #1e293b);
+      border: 1px solid var(--border, #e2e8f0);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--text, #1e293b);
+      font-size: 1rem;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border, #e2e8f0);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      background: var(--bg, #ffffff);
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary, #6366f1);
+      box-shadow: 0 0 0 3px rgb(99 102 241 / 0.1);
+      transform: translateY(-1px);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: inherit;
+      line-height: 1.6;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .post-form {
+      max-width: 600px;
+    }
+
+    .card {
+      background: var(--bg, #ffffff);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+      border: 1px solid var(--border, #e2e8f0);
+    }
+  </style>
+</Layout>

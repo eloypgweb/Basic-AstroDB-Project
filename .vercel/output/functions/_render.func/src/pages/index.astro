@@ -1,0 +1,354 @@
+---
+// src/pages/index.astro
+import { db, Posts, desc } from 'astro:db';
+import { actions } from 'astro:actions';
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = false; // necesario para acciones
+
+const posts = await db.select().from(Posts).orderBy(desc(Posts.published));
+const deleteResult = Astro.getActionResult(actions.deletePost);
+
+// Si se eliminó un post exitosamente, recargar la página
+if (deleteResult && !deleteResult.error) {
+  return Astro.redirect('/');
+}
+---
+
+<Layout title="Mi Blog - Inicio">
+  <div class="header">
+    <h1>🚀 EloBlog</h1>
+    <p>Bienvenido a mi blog personal creado con Astro y Astro DB</p>
+  </div>
+
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h2 style="margin: 0; color: var(--text); font-size: 1.875rem;">Últimos Posts</h2>
+      <a href="/new" class="btn btn-primary">
+        ✍️ Crear nuevo post
+      </a>
+    </div>
+    
+    {deleteResult?.error && (
+      <div class="alert alert-error">
+        ❌ Error eliminando el post
+      </div>
+    )}
+    
+    {posts.length === 0 ? (
+      <div style="text-align: center; padding: 3rem; color: var(--text, #1e293b);">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">📝</div>
+        <h3 style="margin-bottom: 0.5rem; color: var(--text, #1e293b);">No hay posts aún</h3>
+        <p style="color: var(--text, #1e293b); opacity: 0.8;">¡Crea tu primer post para comenzar!</p>
+        <a href="/new" class="btn btn-primary" style="margin-top: 1rem;">
+          Crear primer post
+        </a>
+      </div>
+    ) : (
+      <div class="posts-grid">
+        {posts.map((post: any) => (
+          <article class="post-card">
+            <div class="post-content">
+              <h3>
+                <a href={`/posts/${post.id}`} class="post-title-link">
+                  {post.title}
+                </a>
+              </h3>
+              <p class="post-excerpt">
+                {post.content.length > 150 
+                  ? post.content.substring(0, 150) + '...' 
+                  : post.content
+                }
+              </p>
+              <div class="post-meta">
+                <span class="post-date">
+                  📅 {new Date(post.published).toLocaleDateString('es-ES', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+              </div>
+            </div>
+            <div class="post-actions">
+              <a href={`/edit/${post.id}`} class="btn btn-secondary btn-sm">
+                ✏️ Editar
+              </a>
+              <form method="POST" action={actions.deletePost} style="display: inline;" class="delete-form" data-post-title={post.title}>
+                <input type="hidden" name="id" value={post.id} />
+                <button type="button" class="btn btn-danger btn-sm delete-btn">
+                  🗑️ Eliminar
+                </button>
+              </form>
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🗑️ Confirmar eliminación</h3>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que quieres eliminar el post "<span id="postTitle"></span>"?</p>
+        <p class="warning-text">⚠️ Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelDelete">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Asegurar que los estilos de botones se apliquen */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary, #6366f1);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark, #4f46e5);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+    }
+
+    .btn-secondary {
+      background: var(--secondary, #f1f5f9);
+      color: var(--text, #1e293b);
+      border: 1px solid var(--border, #e2e8f0);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: var(--danger, #ef4444);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+    }
+
+    .posts-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    
+    .post-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
+    
+    .post-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary);
+    }
+    
+    .post-content {
+      margin-bottom: 1rem;
+    }
+    
+    .post-title-link {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.25rem;
+      line-height: 1.4;
+    }
+    
+    .post-title-link:hover {
+      color: var(--primary);
+    }
+    
+    .post-excerpt {
+      color: var(--text-light);
+      margin: 0.75rem 0;
+      line-height: 1.5;
+    }
+    
+    .post-meta {
+      margin-bottom: 1rem;
+    }
+    
+    .post-date {
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+    
+    .post-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+    
+    @media (min-width: 768px) {
+      .posts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      }
+    }
+
+    /* Estilos del modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+      animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+      padding: 1.5rem 1.5rem 1rem 1.5rem;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      color: var(--text, #1e293b);
+      font-size: 1.25rem;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-body p {
+      margin: 0 0 1rem 0;
+      color: var(--text, #1e293b);
+      line-height: 1.5;
+    }
+
+    .warning-text {
+      color: var(--danger, #ef4444);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem 1.5rem 1.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('deleteModal');
+      const postTitleSpan = document.getElementById('postTitle');
+      const cancelBtn = document.getElementById('cancelDelete');
+      const confirmBtn = document.getElementById('confirmDelete');
+      let currentForm: HTMLFormElement | null = null;
+
+      // Manejar clicks en botones de eliminar
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const button = e.target as HTMLButtonElement;
+          currentForm = button.closest('.delete-form') as HTMLFormElement;
+          const postTitle = currentForm?.dataset.postTitle || '';
+          if (postTitleSpan) {
+            postTitleSpan.textContent = postTitle;
+          }
+          modal?.classList.add('show');
+        });
+      });
+
+      // Manejar cancelación
+      cancelBtn?.addEventListener('click', function() {
+        modal?.classList.remove('show');
+        currentForm = null;
+      });
+
+      // Manejar confirmación
+      confirmBtn?.addEventListener('click', function() {
+        if (currentForm) {
+          currentForm.submit();
+        }
+      });
+
+      // Cerrar modal al hacer click fuera
+      modal?.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.classList.remove('show');
+          currentForm = null;
+        }
+      });
+
+      // Cerrar modal con Escape
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal?.classList.contains('show')) {
+          modal.classList.remove('show');
+          currentForm = null;
+        }
+      });
+    });
+  </script>
+</Layout>
